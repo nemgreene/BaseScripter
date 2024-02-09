@@ -1,5 +1,6 @@
 import pymel.core as pmc
-
+import math
+import random
 import pymel.core as pmc
 import maya.api.OpenMaya as om
 
@@ -164,7 +165,15 @@ class BaseScripter():
                 pmc.setAttr(this.ag(obj, attr), lock=1, k=0, channelBox=0)
 
     def __init__(this, *args, **kwargs):
-        this.title = args[0] or "BaseScripterInstance"
+        try:
+            this.title = args[0]
+        except: 
+             this.title = "BaseScripterInstance"
+        try:
+            this.name = this.name
+        except: 
+            this.name = "BaseScripterDefaultName"
+
         this.__dict__.update(kwargs)
         this.groups = {}
 
@@ -452,7 +461,3 @@ class BaseScripter():
     def applyToAxis(this, val, vect = [0,1,0]):
         ret = [val * vect[0], val * vect[1], val * vect[2]]
         return ret
-
-
-
-
