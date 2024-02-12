@@ -3,12 +3,15 @@ import math
 import random
 import pymel.core as pmc
 import maya.api.OpenMaya as om
+import unittest
 
 # import maya.cmds as cmds
 
 # # Clear caches in all dependency graph nodes
 # cmds.clearCache( all=True )
 
+
+# ----------------------V1-------------------------
 # import sys
 # path = r'G:\My Drive\Maya\scripts\BaseScripter'
 # if path not in sys.path:
@@ -17,6 +20,12 @@ import maya.api.OpenMaya as om
 # from baseScripter import BaseScripter
 
 # bg = BaseScripter("test")
+# ----------------------V2-------------------------
+
+# import baseScripter
+# reload(baseScripter)
+
+# bs= baseScripter.BaseScripter()
 
 
 class BaseScripter():
@@ -165,28 +174,33 @@ class BaseScripter():
                 pmc.setAttr(this.ag(obj, attr), lock=1, k=0, channelBox=0)
 
     def __init__(this, *args, **kwargs):
-        try:
-            this.title = args[0]
-        except: 
-             this.title = "BaseScripterInstance"
-        try:
-            this.name = this.name
-        except: 
-            this.name = "BaseScripterDefaultName"
+        """
+        Initializes the BaseScripter Class
 
+        If selection is present at runtime, it will be stored in this.target
+
+        KWArgs:
+        - name: [String] Name of feature being built
+        - side: [String] Included in the label if present
+        """
+        
         this.__dict__.update(kwargs)
         this.groups = {}
-
-        this.selection = pmc.ls(sl=1)
+        this.target = pmc.ls(sl=1)
         this.debug = True
 
-        this.cleanupList = ["pointMatrixMult", "decomposeMatrix", "composeMatrix", "motionPath", "cluster", "tweak", "wire", "blendShape", "condition", "blendTwoAttr",
-                    "distanceBetween", "setRange", "multiplyDivide", "plusMinusAverage"]
-
-
-        if("side" in kwargs):
-            this.label = this.ng(kwargs['side'], this.name, n=0)
-        else:
+        if("name" in kwargs):
+            this.cleanup = pmc.group(n = this.ng('grp',this.label, n=1 ), em=1)
+            this.groups['cleanup'] = this.cleanup
+            this.name = kwargs['name']
+            this.cleanupList = ["pointMatrixMult", "decomposeMatrix", "composeMatrix", "motionPath", "cluster", "tweak", "wire", "blendShape", "condition", "blendTwoAttr",
+                        "distanceBetween", "setRange", "multiplyDivide","plusMinusAverage"]
+            if("side" in kwargs):
+                this.label = this.ng(kwargs['side'], this.name, n=0)
+            else:
+                this.label = this.name
+        else: 
+            this.name = "BaseScripterDefaultName"
             this.label = this.name
 
         # scene cleanup on reset
@@ -198,9 +212,7 @@ class BaseScripter():
             print("No cleanup")
         
 
-        this.cleanup = pmc.group(n = this.ng('grp',this.label, n=1 ), em=1)
-        this.groups['cleanup'] = this.cleanup
-        pmc.select(cl=1)
+        
 
     def makeNested(this, asset, parent =None):
         """
@@ -327,19 +339,20 @@ class BaseScripter():
         return offsetGrp
     
     def execute(this, *args):
-        print("executing")
         execution_generator = (x for x in args)
         for procs in execution_generator:
             try:
                 procs()
             except Exception as error:
-                print("Error at function: " + procs.__name__ )
+                try:
+                    print("Error at function: " + procs.__name__ )
+                except: 
+                    print("Error in BaseScripter Execution")
                 print(error)
                 return
-        if(this.debug):
-            if(this.selection):
-                pmc.select(this.selection)  
-        print(this.title +  " execution complete")
+        if(this.debug and this.target):
+            pmc.select(this.target)  
+        print(this.name +  " execution complete")
 
     # Mathematical
     def __gen_exponential_distro_rand_variable(this):
