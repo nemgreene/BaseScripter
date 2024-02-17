@@ -3,6 +3,7 @@ import math
 import random
 import pymel.core as pmc
 import maya.api.OpenMaya as om
+
 import unittest
 
 # import maya.cmds as cmds
@@ -17,12 +18,20 @@ import unittest
 # if path not in sys.path:
 #     sys.path.append(path)
 
-# from baseScripter import BaseScripter
-
-# bg = BaseScripter("test")
-# ----------------------V2-------------------------
 
 # import baseScripter
+# reload(baseScripter)
+
+# bs= baseScripter.BaseScripter()
+
+# ------------------------V2-----------------------
+# import sys
+# path = r'G:\My Drive\Maya\MyScripts\BaseScripter'
+# if path not in sys.path:
+#     sys.path.append(path)
+
+# import baseScripter
+
 # reload(baseScripter)
 
 # bs= baseScripter.BaseScripter()
@@ -190,15 +199,15 @@ class BaseScripter():
         this.debug = True
 
         if("name" in kwargs):
+            if("side" in kwargs):
+                this.label = this.ng(kwargs['side'], this.name, n=0)
+            else:
+                this.label = this.name
             this.cleanup = pmc.group(n = this.ng('grp',this.label, n=1 ), em=1)
             this.groups['cleanup'] = this.cleanup
             this.name = kwargs['name']
             this.cleanupList = ["pointMatrixMult", "decomposeMatrix", "composeMatrix", "motionPath", "cluster", "tweak", "wire", "blendShape", "condition", "blendTwoAttr",
                         "distanceBetween", "setRange", "multiplyDivide","plusMinusAverage"]
-            if("side" in kwargs):
-                this.label = this.ng(kwargs['side'], this.name, n=0)
-            else:
-                this.label = this.name
         else: 
             this.name = "BaseScripterDefaultName"
             this.label = this.name
@@ -335,7 +344,11 @@ class BaseScripter():
         offsetGrp = pmc.group(em=1, n=name)
         this.ghostConstraint("parent", obj, offsetGrp)
         pmc.parent(obj, offsetGrp)
-        pmc.parent(offsetGrp, this.cleanup if "parent" not in kwargs else kwargs['parent'] )
+        if("parent" in kwargs):
+            pmc.parent(offsetGrp, kwargs['parent'])
+
+        if(hasattr(this, "cleanup") and "parent" not in kwargs):
+            pmc.parent(offsetGrp, this.cleanup)
         return offsetGrp
     
     def execute(this, *args):
